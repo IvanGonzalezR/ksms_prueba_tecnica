@@ -5,6 +5,7 @@ import useFetchPhotos from './hooks/useFetchPhotos'
 const App = () => {
   const [ moveableComponents, setMoveableComponents ] = useState([]);
   const [ selected, setSelected ] = useState(null);
+  const parentRef = useRef(null);
 
   // Getting data from the API
   const { data } = useFetchPhotos()
@@ -71,6 +72,7 @@ const App = () => {
       <button onClick={addMoveable}>Add Moveable1</button>
       <div
         id="parent"
+        ref={parentRef}
         style={{
           position: "relative",
           background: "black",
@@ -87,6 +89,7 @@ const App = () => {
             setSelected={setSelected}
             isSelected={selected === item.id}
             fit={item.fit}
+            parentRef={parentRef}
           />
         ))}
       </div>
@@ -108,9 +111,11 @@ const Component = ({
   isSelected = false,
   updateEnd,
   imageUrl,
-  fit
+  fit,
+  parentRef,
 }) => {
   const ref = useRef();
+  const moveableRef = useRef();
 
   const [ nodoReferencia, setNodoReferencia ] = useState({
     top,
@@ -219,8 +224,9 @@ const Component = ({
         onClick={() => setSelected(id)}
       />
 
-      <Moveable
-        target={isSelected && ref.current}
+      {/* <Moveable
+        ref={moveableRef}
+        target={ref}
         resizable
         draggable
         onDrag={(e) => {
@@ -237,11 +243,48 @@ const Component = ({
         onResizeEnd={onResizeEnd}
         keepRatio={false}
         throttleResize={1}
+        throttleDrag={1}
+        startDragRotate={0}
+        throttleDragRotate={0}
         renderDirections={[ "nw", "n", "ne", "w", "e", "sw", "s", "se" ]}
-        edge={false}
+        edge={[]}
+        edgeDraggable={false}
         zoom={1}
         origin={false}
         padding={{ left: 0, top: 0, right: 0, bottom: 0 }}
+        bounds={{ "left": 0, "top": 0, "right": 0, "bottom": 0, "position": "css" }}
+      /> */}
+      <Moveable
+        ref={moveableRef}
+        renderDirections={[ "nw", "n", "ne", "w", "e", "sw", "s", "se" ]}
+        target={ref}
+        draggable={true}
+        throttleDrag={1}
+        edgeDraggable={false}
+        startDragRotate={0}
+        throttleDragRotate={0}
+        resizable={true}
+        keepRatio={false}
+        snappable={true}
+        bounds={{ "left": 0, "top": 0, "right": 0, "bottom": 0, "position": "css" }}
+        edge={[]}
+        origin={false}
+        onDrag={(e) => {
+          updateMoveable(id, {
+            top: e.top,
+            left: e.left,
+            width,
+            height,
+            imageUrl,
+            fit
+          });
+        }}
+        onResize={e => {
+          e.target.style.width = `${e.width}px`;
+          e.target.style.height = `${e.height}px`;
+          e.target.style.transform = e.drag.transform;
+
+        }}
       />
     </>
   );
