@@ -102,7 +102,7 @@ const App = () => {
         <button
           onClick={addMoveable}
           style={{ width: '20%', height: '30px', borderRadius: '40px', background: '#e2e2e2', cursor: 'pointer' }}
-        >Add Moveable1</button>
+        >Add Moveable</button>
       </div>
       <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2rem' }}>
         {moveableComponents.map((item, index) => (
