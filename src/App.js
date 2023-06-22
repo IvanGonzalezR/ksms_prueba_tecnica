@@ -5,7 +5,6 @@ import useFetchPhotos from './hooks/useFetchPhotos'
 const App = () => {
   const [ moveableComponents, setMoveableComponents ] = useState([]);
   const [ selected, setSelected ] = useState(null);
-  const parentRef = useRef(null);
 
   // Getting data from the API
   const { data } = useFetchPhotos()
@@ -46,6 +45,13 @@ const App = () => {
     setMoveableComponents(updatedMoveables);
   };
 
+  const deleteMoveable = (id) => {
+    const updatedMoveables = moveableComponents.filter(
+      (moveable) => moveable.id !== id
+    );
+    setMoveableComponents(updatedMoveables);
+  }
+
   const handleResizeStart = (index, e) => {
     console.log("e", e.direction);
     // Check if the resize is coming from the left handle
@@ -68,29 +74,43 @@ const App = () => {
   };
 
   return (
-    <main style={{ height: "100vh", width: "100vw" }}>
-      <button onClick={addMoveable}>Add Moveable1</button>
-      <div
-        id="parent"
-        ref={parentRef}
-        style={{
-          position: "relative",
-          background: "black",
-          height: "80vh",
-          width: "80vw",
-        }}
-      >
+    <main style={{ height: "100vh", width: "100vw", display: 'flex', gap: '20px' }}>
+      <div style={{ display: 'flex', flexDirection: "column", alignItems: 'center', gap: '2rem' }}>
+        <div
+          id="parent"
+          style={{
+            position: "relative",
+            background: "black",
+            height: "80vh",
+            width: "80vw",
+          }}
+        >
+          {moveableComponents.map((item, index) => (
+            <div key={index}>
+              <Component
+                {...item}
+                updateMoveable={updateMoveable}
+                handleResizeStart={handleResizeStart}
+                deleteMoveable={deleteMoveable}
+                setSelected={setSelected}
+                isSelected={selected === item.id}
+                fit={item.fit}
+              />
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={addMoveable}
+          style={{ width: '20%', height: '30px', borderRadius: '40px', background: '#e2e2e2', cursor: 'pointer' }}
+        >Add Moveable1</button>
+      </div>
+      <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2rem' }}>
         {moveableComponents.map((item, index) => (
-          <Component
-            {...item}
+          <button
+            onClick={() => deleteMoveable(item.id)}
             key={index}
-            updateMoveable={updateMoveable}
-            handleResizeStart={handleResizeStart}
-            setSelected={setSelected}
-            isSelected={selected === item.id}
-            fit={item.fit}
-            parentRef={parentRef}
-          />
+            style={{ height: '30px', borderRadius: '40px', background: '#e2e2e2', cursor: 'pointer' }}
+          >Remove element {item.id}</button>
         ))}
       </div>
     </main>
@@ -112,7 +132,6 @@ const Component = ({
   updateEnd,
   imageUrl,
   fit,
-  parentRef,
 }) => {
   const ref = useRef();
   const moveableRef = useRef();
@@ -187,9 +206,15 @@ const Component = ({
           height: height,
           backgroundImage: `url('${imageUrl}')`,
           backgroundSize: fit,
+          cursor: 'pointer'
         }}
-        onClick={() => { setSelected(id); console.log('Selected element: ' + id) }}
-      />
+        onClick={() => setSelected(id)}
+      >
+        <p style={{ fontSize: '20px', textAlign: 'center' }}>
+          ID: {id}
+        </p>
+
+      </div>
 
       <Moveable
         ref={moveableRef}
@@ -215,7 +240,8 @@ const Component = ({
         onResize={onResize}
         verticalGuidelines={[ 50, 150, 250, 450, 550 ]}
         horizontalGuidelines={[ 0, 100, 200, 400, 500 ]}
-      />
+      >
+      </Moveable>
     </>
   );
 };
