@@ -24,7 +24,7 @@ const App = () => {
     setMoveableComponents([
       ...moveableComponents,
       {
-        id: Math.floor(Math.random() * Date.now()),
+        id: randomObject.id,
         top: 0,
         left: 0,
         width: 100,
@@ -173,39 +173,6 @@ const Component = ({
     });
   };
 
-  const onResizeEnd = async (e) => {
-    let newWidth = e.lastEvent?.width;
-    let newHeight = e.lastEvent?.height;
-
-    const positionMaxTop = top + newHeight;
-    const positionMaxLeft = left + newWidth;
-
-    if (positionMaxTop > parentBounds?.height)
-      newHeight = parentBounds?.height - top;
-    if (positionMaxLeft > parentBounds?.width)
-      newWidth = parentBounds?.width - left;
-
-    const { lastEvent } = e;
-    const { drag } = lastEvent;
-    const { beforeTranslate } = drag;
-
-    const absoluteTop = top + beforeTranslate[ 1 ];
-    const absoluteLeft = left + beforeTranslate[ 0 ];
-
-    updateMoveable(
-      id,
-      {
-        top: absoluteTop,
-        left: absoluteLeft,
-        width: newWidth,
-        height: newHeight,
-        imageUrl,
-        fit
-      },
-      true
-    );
-  };
-
   return (
     <>
       <div
@@ -221,39 +188,9 @@ const Component = ({
           backgroundImage: `url('${imageUrl}')`,
           backgroundSize: fit,
         }}
-        onClick={() => setSelected(id)}
+        onClick={() => { setSelected(id); console.log('Selected element: ' + id) }}
       />
 
-      {/* <Moveable
-        ref={moveableRef}
-        target={ref}
-        resizable
-        draggable
-        onDrag={(e) => {
-          updateMoveable(id, {
-            top: e.top,
-            left: e.left,
-            width,
-            height,
-            imageUrl,
-            fit
-          });
-        }}
-        onResize={onResize}
-        onResizeEnd={onResizeEnd}
-        keepRatio={false}
-        throttleResize={1}
-        throttleDrag={1}
-        startDragRotate={0}
-        throttleDragRotate={0}
-        renderDirections={[ "nw", "n", "ne", "w", "e", "sw", "s", "se" ]}
-        edge={[]}
-        edgeDraggable={false}
-        zoom={1}
-        origin={false}
-        padding={{ left: 0, top: 0, right: 0, bottom: 0 }}
-        bounds={{ "left": 0, "top": 0, "right": 0, "bottom": 0, "position": "css" }}
-      /> */}
       <Moveable
         ref={moveableRef}
         renderDirections={[ "nw", "n", "ne", "w", "e", "sw", "s", "se" ]}
@@ -263,28 +200,21 @@ const Component = ({
         edgeDraggable={false}
         startDragRotate={0}
         throttleDragRotate={0}
-        resizable={true}
+        resizable={isSelected}
         keepRatio={false}
         snappable={true}
         bounds={{ "left": 0, "top": 0, "right": 0, "bottom": 0, "position": "css" }}
         edge={[]}
         origin={false}
-        onDrag={(e) => {
-          updateMoveable(id, {
-            top: e.top,
-            left: e.left,
-            width,
-            height,
-            imageUrl,
-            fit
-          });
+        onDrag={e => {
+          e.target.style.transform = e.transform;
+          if (!isSelected) {
+            setSelected(id);
+          }
         }}
-        onResize={e => {
-          e.target.style.width = `${e.width}px`;
-          e.target.style.height = `${e.height}px`;
-          e.target.style.transform = e.drag.transform;
-
-        }}
+        onResize={onResize}
+        verticalGuidelines={[ 50, 150, 250, 450, 550 ]}
+        horizontalGuidelines={[ 0, 100, 200, 400, 500 ]}
       />
     </>
   );
