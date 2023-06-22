@@ -1,13 +1,24 @@
 import React, { useRef, useState, useEffect } from "react";
 import Moveable from "react-moveable";
+import useFetchPhotos from './hooks/useFetchPhotos'
 
 const App = () => {
-  const [moveableComponents, setMoveableComponents] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const [ moveableComponents, setMoveableComponents ] = useState([]);
+  const [ selected, setSelected ] = useState(null);
+
+  // Getting data from the API
+  const { data } = useFetchPhotos()
 
   const addMoveable = () => {
     // Create a new moveable component and add it to the array
-    const COLORS = ["red", "blue", "yellow", "green", "purple"];
+    const objectFit = [ "fill", "contain", "cover", "scale-down", "none" ];
+
+    // Get a random object from the object "data" between 0 and data.length
+    const randomObject = data[ Math.floor(Math.random() * data.length) ]
+    console.log(randomObject);
+
+    // Get a random property from the objectFit array
+    const randomObjectFit = objectFit[ Math.floor(Math.random() * objectFit.length) ];
 
     setMoveableComponents([
       ...moveableComponents,
@@ -17,8 +28,9 @@ const App = () => {
         left: 0,
         width: 100,
         height: 100,
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        updateEnd: true
+        updateEnd: true,
+        imageUrl: randomObject.url,
+        fit: randomObjectFit
       },
     ]);
   };
@@ -36,7 +48,7 @@ const App = () => {
   const handleResizeStart = (index, e) => {
     console.log("e", e.direction);
     // Check if the resize is coming from the left handle
-    const [handlePosX, handlePosY] = e.direction;
+    const [ handlePosX, handlePosY ] = e.direction;
     // 0 => center
     // -1 => top or left
     // 1 => bottom or right
@@ -55,7 +67,7 @@ const App = () => {
   };
 
   return (
-    <main style={{ height : "100vh", width: "100vw" }}>
+    <main style={{ height: "100vh", width: "100vw" }}>
       <button onClick={addMoveable}>Add Moveable1</button>
       <div
         id="parent"
@@ -74,6 +86,7 @@ const App = () => {
             handleResizeStart={handleResizeStart}
             setSelected={setSelected}
             isSelected={selected === item.id}
+            fit={item.fit}
           />
         ))}
       </div>
@@ -90,27 +103,29 @@ const Component = ({
   width,
   height,
   index,
-  color,
   id,
   setSelected,
   isSelected = false,
   updateEnd,
+  imageUrl,
+  fit
 }) => {
   const ref = useRef();
 
-  const [nodoReferencia, setNodoReferencia] = useState({
+  const [ nodoReferencia, setNodoReferencia ] = useState({
     top,
     left,
     width,
     height,
     index,
-    color,
     id,
+    imageUrl,
+    fit
   });
 
   let parent = document.getElementById("parent");
   let parentBounds = parent?.getBoundingClientRect();
-  
+
   const onResize = async (e) => {
     // ACTUALIZAR ALTO Y ANCHO
     let newWidth = e.width;
@@ -129,7 +144,8 @@ const Component = ({
       left,
       width: newWidth,
       height: newHeight,
-      color,
+      imageUrl,
+      fit
     });
 
     // ACTUALIZAR NODO REFERENCIA
@@ -138,8 +154,8 @@ const Component = ({
     ref.current.style.width = `${e.width}px`;
     ref.current.style.height = `${e.height}px`;
 
-    let translateX = beforeTranslate[0];
-    let translateY = beforeTranslate[1];
+    let translateX = beforeTranslate[ 0 ];
+    let translateY = beforeTranslate[ 1 ];
 
     ref.current.style.transform = `translate(${translateX}px, ${translateY}px)`;
 
@@ -168,8 +184,8 @@ const Component = ({
     const { drag } = lastEvent;
     const { beforeTranslate } = drag;
 
-    const absoluteTop = top + beforeTranslate[1];
-    const absoluteLeft = left + beforeTranslate[0];
+    const absoluteTop = top + beforeTranslate[ 1 ];
+    const absoluteLeft = left + beforeTranslate[ 0 ];
 
     updateMoveable(
       id,
@@ -178,7 +194,8 @@ const Component = ({
         left: absoluteLeft,
         width: newWidth,
         height: newHeight,
-        color,
+        imageUrl,
+        fit
       },
       true
     );
@@ -196,7 +213,8 @@ const Component = ({
           left: left,
           width: width,
           height: height,
-          background: color,
+          backgroundImage: `url('${imageUrl}')`,
+          backgroundSize: fit,
         }}
         onClick={() => setSelected(id)}
       />
@@ -211,14 +229,15 @@ const Component = ({
             left: e.left,
             width,
             height,
-            color,
+            imageUrl,
+            fit
           });
         }}
         onResize={onResize}
         onResizeEnd={onResizeEnd}
         keepRatio={false}
         throttleResize={1}
-        renderDirections={["nw", "n", "ne", "w", "e", "sw", "s", "se"]}
+        renderDirections={[ "nw", "n", "ne", "w", "e", "sw", "s", "se" ]}
         edge={false}
         zoom={1}
         origin={false}
